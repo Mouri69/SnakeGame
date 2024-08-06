@@ -1,3 +1,11 @@
+/* Reset margins and paddings */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+    height: 100%; /* Full height to avoid overflow */
+}
+
 body {
     display: flex;
     justify-content: center;
@@ -27,17 +35,12 @@ body {
 
 /* Media queries for mobile devices */
 @media (max-width: 600px) {
-    .game-container {
-        max-width: 100%; /* Full width for small screens */
-        height: auto; /* Adjust height for smaller screens */
-    }
-
     #gameCanvas {
-        border-width: 1px; /* Thinner border for mobile */
+        border: 1px solid black; /* Thinner border for mobile */
     }
 
     #score-container {
-        top: -20px; /* Adjust the score container position for mobile */
         font-size: 16px; /* Smaller font size for mobile */
+        top: -20px; /* Adjust the score container position for mobile */
     }
 }
