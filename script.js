@@ -52,10 +52,9 @@ function draw() {
     ctx.fillStyle = 'red';
     ctx.fillRect(food.x, food.y, box, box);
 
-    // Draw score
-    ctx.fillStyle = 'black';
-    ctx.font = '20px Arial';
-    ctx.fillText('Score: ' + score, box, box);
+    // Update score display
+    const scoreElement = document.getElementById('score');
+    scoreElement.textContent = 'Score: ' + score;
 
     // Update snake position
     let snakeX = snake[0].x;
@@ -97,7 +96,7 @@ function draw() {
 
 function collisionWithWalls(head) {
     // Adjusted to check if the entire head is out of bounds
-    const collision = head.x < 0 || head.x + box > canvasWidth || head.y < 0 || head.y + box > canvasHeight;
+    const collision = head.x < 0 || head.x >= canvasWidth || head.y < 0 || head.y >= canvasHeight;
     if (collision) {
         console.log('Collision with walls detected!');
     }
