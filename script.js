@@ -21,6 +21,7 @@ let gameSpeed = 100; // Default speed
 let slowDownDuration = 0; // Duration for slow down effect
 let extraLife = 0; // Counter for extra lives
 let lives = 1; // Initial number of lives
+let specialFoodTimer = 0; // Timer for generating special food
 
 document.getElementById('high-score').textContent = 'High Score: ' + highScore;
 document.getElementById('score').textContent = 'Score: ' + score;
@@ -142,7 +143,9 @@ function draw() {
             console.log(`Collision detected. Lives remaining: ${lives}`);
             if (lives > 0) {
                 // Continue game with remaining lives
-                setTimeout()
+                setTimeout(() => {
+                    // Continue game logic if needed
+                }, 0);
             }
         }
     }
@@ -154,15 +157,15 @@ function draw() {
             gameSpeed = 100; // Restore speed
             console.log('Speed back to normal');
             showFlashEffect('transparent'); // Clear the flash effect
-            specialFood = generateSpecialFood(); // Generate new special food
+            specialFood = generateSpecialFood(); // Generate new special food after effect ends
         }
     }
 
-    // Periodically generate special food
-    if (Math.random() < 0.01) { // Adjust probability as needed
-        if (!specialFood) {
-            specialFood = generateSpecialFood();
-        }
+    // Handle special food generation
+    specialFoodTimer -= 100; // Decrease timer
+    if (specialFoodTimer <= 0) {
+        specialFood = generateSpecialFood();
+        specialFoodTimer = Math.floor(Math.random() * (15000 - 10000 + 1)) + 10000; // 10 to 15 seconds
     }
 }
 
@@ -223,14 +226,29 @@ function generateSpecialFood() {
     do {
         foodX = Math.floor(Math.random() * (canvasSizeX - 2)) * box + borderBuffer;
         foodY = Math.floor(Math.random() * (canvasSizeY - 2)) * box + borderBuffer;
-    } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
+    } while (collisionWithSpecialFood(foodX, foodY));
+
+    // Randomly choose between slow down and extra life
+    const types = ['slowDown', 'extraLife'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const colors = { slowDown: 'blue', extraLife: 'yellow' };
 
     return {
         x: foodX,
         y: foodY,
-        color: Math.random() < 0.5 ? 'blue' : 'yellow', // Blue for slow down, yellow for extra life
-        type: Math.random() < 0.5 ? 'slowDown' : 'extraLife' // Randomly select the type
+        type: type,
+        color: colors[type]
     };
+}
+
+function collisionWithSpecialFood(x, y) {
+    if (specialFood) {
+        // Check if special food position overlaps with any part of the snake
+        if (x === specialFood.x && y === specialFood.y) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function showFlashEffect(color) {
@@ -269,18 +287,18 @@ function showUIEffect(effectText) {
 }
 
 function restartGame() {
-    snake = [{ x: 9 * box, y: 10 * box }];
+    snake = [];
+    snake[0] = { x: 9 * box, y: 10 * box };
     d = 'RIGHT';
     nextDirection = 'RIGHT';
     score = 0;
-    lives = 1; // Reset lives on restart
+    lives = 1;
+    gameSpeed = 100;
+    specialFood = null;
+    slowDownDuration = 0;
     document.getElementById('score').textContent = 'Score: ' + score;
     document.getElementById('high-score').textContent = 'High Score: ' + highScore;
-    gameSpeed = 100; // Reset speed
-    slowDownDuration = 0; // Reset slow down effect
-    specialFood = generateSpecialFood(); // Generate special food when restarting
-    clearInterval(game);
-    game = setInterval(draw, gameSpeed);
+    console.log(`Game restarted! Lives: ${lives}`);
 }
 
-let game = setInterval(draw, gameSpeed);
+const game = setInterval(draw, gameSpeed);
