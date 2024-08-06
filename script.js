@@ -11,7 +11,7 @@ let snake = [];
 snake[0] = { x: 9 * box, y: 10 * box };
 
 let food = generateFood();
-let specialFood = generateSpecialFood();
+let specialFood = null; // Initialize with no special food
 
 let d = 'RIGHT'; // Initialize direction to 'RIGHT'
 let nextDirection = 'RIGHT'; // Queue direction changes
@@ -142,13 +142,7 @@ function draw() {
             console.log(`Collision detected. Lives remaining: ${lives}`);
             if (lives > 0) {
                 // Continue game with remaining lives
-                setTimeout(() => {
-                    // Reset position and direction but keep score and speed
-                    snake = [{ x: 9 * box, y: 10 * box }];
-                    d = 'RIGHT';
-                    nextDirection = 'RIGHT';
-                    console.log(`Lives: ${lives}`); // Log current number of lives
-                }, 1000); // Short delay before continuing
+                setTimeout()
             }
         }
     }
@@ -161,6 +155,13 @@ function draw() {
             console.log('Speed back to normal');
             showFlashEffect('transparent'); // Clear the flash effect
             specialFood = generateSpecialFood(); // Generate new special food
+        }
+    }
+
+    // Periodically generate special food
+    if (Math.random() < 0.01) { // Adjust probability as needed
+        if (!specialFood) {
+            specialFood = generateSpecialFood();
         }
     }
 }
@@ -207,35 +208,29 @@ function generateFood() {
                 break;
             }
         }
-    } while (collision); // Repeat until a non-colliding position is found
+    } while (collision);
 
     return {
         x: foodX,
         y: foodY,
-        color: 'red' // Normal food color
+        color: 'red' // Normal food is red
     };
 }
 
 function generateSpecialFood() {
-    if (Math.random() < 0.5) { // 50% chance for special food to appear
-        let foodX, foodY;
-        const borderBuffer = box;
+    let foodX, foodY, borderBuffer = box; // Buffer space from the edge to avoid collision issues
 
-        // Ensure special food does not overlap with snake
-        do {
-            foodX = Math.floor(Math.random() * (canvasSizeX - 2)) * box + borderBuffer;
-            foodY = Math.floor(Math.random() * (canvasSizeY - 2)) * box + borderBuffer;
-        } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
+    do {
+        foodX = Math.floor(Math.random() * (canvasSizeX - 2)) * box + borderBuffer;
+        foodY = Math.floor(Math.random() * (canvasSizeY - 2)) * box + borderBuffer;
+    } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
 
-        return {
-            x: foodX,
-            y: foodY,
-            color: Math.random() < 0.5 ? 'blue' : 'yellow', // Blue for slow down, yellow for extra life
-            type: Math.random() < 0.5 ? 'slowDown' : 'extraLife' // Randomly select the type
-        };
-    } else {
-        return null;
-    }
+    return {
+        x: foodX,
+        y: foodY,
+        color: Math.random() < 0.5 ? 'blue' : 'yellow', // Blue for slow down, yellow for extra life
+        type: Math.random() < 0.5 ? 'slowDown' : 'extraLife' // Randomly select the type
+    };
 }
 
 function showFlashEffect(color) {
@@ -252,29 +247,6 @@ function showFlashEffect(color) {
     setTimeout(() => {
         document.body.removeChild(flashOverlay);
     }, 500); // Duration of the flash effect
-}
-
-function showEffectAnimation(color) {
-    const animationDuration = 500; // Duration of the animation
-    const startTime = Date.now();
-
-    function drawEffect() {
-        const elapsed = Date.now() - startTime;
-        if (elapsed < animationDuration) {
-            ctx.fillStyle = color;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            requestAnimationFrame(drawEffect);
-        } else {
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the effect
-        }
-    }
-
-    drawEffect();
-}
-
-function playSound(sound) {
-    const audio = new Audio(sound);
-    audio.play();
 }
 
 function showUIEffect(effectText) {
@@ -305,7 +277,8 @@ function restartGame() {
     document.getElementById('score').textContent = 'Score: ' + score;
     document.getElementById('high-score').textContent = 'High Score: ' + highScore;
     gameSpeed = 100; // Reset speed
-    specialFood = generateSpecialFood();
+    slowDownDuration = 0; // Reset slow down effect
+    specialFood = generateSpecialFood(); // Generate special food when restarting
     clearInterval(game);
     game = setInterval(draw, gameSpeed);
 }
