@@ -91,6 +91,8 @@ function draw() {
             slowDownDuration = 5000; // Slow down effect duration in milliseconds
             gameSpeed = 300; // Slow down the speed
             console.log(`Slow Down Food eaten! Game speed: ${gameSpeed}`);
+            showFlashEffect('blue'); // Flash blue for slow down food
+            showUIEffect('Speed Reduced!'); // Show UI effect
         } else if (specialFood.type === 'extraLife') {
             if (lives < 2) {
                 lives++;
@@ -100,6 +102,8 @@ function draw() {
             }
             score++;
             console.log(`Score: ${score}`);
+            showFlashEffect('yellow'); // Flash yellow for extra life food
+            showUIEffect('Extra Life!'); // Show UI effect
         }
         specialFood = null; // Remove special food after it's eaten
     }
@@ -129,13 +133,23 @@ function draw() {
 
     // Check for collision with walls or self
     if (collisionWithWalls(newHead) || collisionWithSelf(newHead)) {
-        if (lives > 1) {
-            lives--; // Reduce lives and continue game
-            console.log(`Collision detected. Lives remaining: ${lives}`);
-        } else {
+        lives--; // Reduce lives on collision
+        if (lives <= 0) {
             clearInterval(game); // End game
             console.log('Game Over!');
             alert('Game Over! Your score: ' + score);
+        } else {
+            console.log(`Collision detected. Lives remaining: ${lives}`);
+            if (lives > 0) {
+                // Continue game with remaining lives
+                setTimeout(() => {
+                    // Reset position and direction but keep score and speed
+                    snake = [{ x: 9 * box, y: 10 * box }];
+                    d = 'RIGHT';
+                    nextDirection = 'RIGHT';
+                    console.log(`Lives: ${lives}`); // Log current number of lives
+                }, 1000); // Short delay before continuing
+            }
         }
     }
 
@@ -145,6 +159,7 @@ function draw() {
         if (slowDownDuration <= 0) {
             gameSpeed = 100; // Restore speed
             console.log('Speed back to normal');
+            showFlashEffect('transparent'); // Clear the flash effect
             specialFood = generateSpecialFood(); // Generate new special food
         }
     }
@@ -212,39 +227,87 @@ function generateSpecialFood() {
             foodY = Math.floor(Math.random() * (canvasSizeY - 2)) * box + borderBuffer;
         } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
 
-        // Randomly assign type and color for special food
-        const foodType = Math.random() < 0.5 ? 'slowDown' : 'extraLife';
-        const foodColor = foodType === 'slowDown' ? 'blue' : 'yellow';
-
         return {
             x: foodX,
             y: foodY,
-            color: foodColor,
-            type: foodType
+            color: Math.random() < 0.5 ? 'blue' : 'yellow', // Blue for slow down, yellow for extra life
+            type: Math.random() < 0.5 ? 'slowDown' : 'extraLife' // Randomly select the type
         };
+    } else {
+        return null;
     }
-    return null;
 }
 
+function showFlashEffect(color) {
+    const flashOverlay = document.createElement('div');
+    flashOverlay.style.position = 'absolute';
+    flashOverlay.style.top = '0';
+    flashOverlay.style.left = '0';
+    flashOverlay.style.width = '100%';
+    flashOverlay.style.height = '100%';
+    flashOverlay.style.backgroundColor = color;
+    flashOverlay.style.opacity = '0.5';
+    flashOverlay.style.pointerEvents = 'none'; // Avoid blocking game interaction
+    document.body.appendChild(flashOverlay);
+    setTimeout(() => {
+        document.body.removeChild(flashOverlay);
+    }, 500); // Duration of the flash effect
+}
+
+function showEffectAnimation(color) {
+    const animationDuration = 500; // Duration of the animation
+    const startTime = Date.now();
+
+    function drawEffect() {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < animationDuration) {
+            ctx.fillStyle = color;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            requestAnimationFrame(drawEffect);
+        } else {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the effect
+        }
+    }
+
+    drawEffect();
+}
+
+function playSound(sound) {
+    const audio = new Audio(sound);
+    audio.play();
+}
+
+function showUIEffect(effectText) {
+    const effectElement = document.createElement('div');
+    effectElement.style.position = 'absolute';
+    effectElement.style.top = '50%';
+    effectElement.style.left = '50%';
+    effectElement.style.transform = 'translate(-50%, -50%)';
+    effectElement.style.fontSize = '24px';
+    effectElement.style.fontWeight = 'bold';
+    effectElement.style.color = 'white';
+    effectElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    effectElement.style.padding = '10px';
+    effectElement.style.borderRadius = '5px';
+    effectElement.textContent = effectText;
+    document.body.appendChild(effectElement);
+    setTimeout(() => {
+        document.body.removeChild(effectElement);
+    }, 1000); // Duration of the effect display
+}
 
 function restartGame() {
-    clearInterval(game); // Clear the existing game interval
     snake = [{ x: 9 * box, y: 10 * box }];
-    food = generateFood();
-    specialFood = generateSpecialFood();
     d = 'RIGHT';
     nextDirection = 'RIGHT';
     score = 0;
-    lives = 1; // Reset lives to initial value
-    extraLife = 0; // Reset extra life count
-    console.log(`Lives: ${lives}`); // Log reset lives count
-    game = setInterval(draw, gameSpeed); // Restart the game with the current speed
+    lives = 1; // Reset lives on restart
+    document.getElementById('score').textContent = 'Score: ' + score;
+    document.getElementById('high-score').textContent = 'High Score: ' + highScore;
+    gameSpeed = 100; // Reset speed
+    specialFood = generateSpecialFood();
+    clearInterval(game);
+    game = setInterval(draw, gameSpeed);
 }
 
-// Start the game
 let game = setInterval(draw, gameSpeed);
-
-// Generate special food every 10 seconds
-setInterval(() => {
-    specialFood = generateSpecialFood();
-}, 10000);
