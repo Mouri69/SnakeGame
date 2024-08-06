@@ -4,15 +4,12 @@ const ctx = canvas.getContext('2d');
 const box = 20;
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
-const canvasSize = canvasWidth / box;
+const canvasSize = canvasWidth / box; // Number of boxes along the width/height
 
 let snake = [];
 snake[0] = { x: 9 * box, y: 10 * box };
 
-let food = {
-    x: Math.floor(Math.random() * canvasSize) * box,
-    y: Math.floor(Math.random() * canvasSize) * box
-};
+let food = generateFood();
 
 let d = 'RIGHT'; // Initialize direction to 'RIGHT'
 let score = 0;
@@ -61,10 +58,7 @@ function draw() {
 
     // Check for collision with food
     if (snakeX === food.x && snakeY === food.y) {
-        food = {
-            x: Math.floor(Math.random() * canvasSize) * box,
-            y: Math.floor(Math.random() * canvasSize) * box
-        };
+        food = generateFood(); // Generate a new food position
         score++;
     } else {
         snake.pop(); // Remove last segment of the snake
@@ -90,8 +84,28 @@ function collision(head, array) {
 
 function drawBorders() {
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, canvasWidth, canvasHeight);
+}
+
+function generateFood() {
+    let foodX, foodY, collision;
+    do {
+        collision = false;
+        // Ensure the food is within the bounds of the canvas
+        foodX = Math.floor(Math.random() * (canvasWidth / box)) * box;
+        foodY = Math.floor(Math.random() * (canvasHeight / box)) * box;
+
+        // Check if food position overlaps with any part of the snake
+        for (let i = 0; i < snake.length; i++) {
+            if (foodX === snake[i].x && foodY === snake[i].y) {
+                collision = true;
+                break;
+            }
+        }
+    } while (collision); // Repeat until a non-colliding position is found
+
+    return { x: foodX, y: foodY };
 }
 
 // Start the game
