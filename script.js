@@ -4,7 +4,8 @@ const ctx = canvas.getContext('2d');
 const box = 20;
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
-const canvasSize = canvasWidth / box; // Number of boxes along the width/height
+const canvasSizeX = canvasWidth / box; // Number of boxes along the width
+const canvasSizeY = canvasHeight / box; // Number of boxes along the height
 
 let snake = [];
 snake[0] = { x: 9 * box, y: 10 * box };
@@ -60,6 +61,7 @@ function draw() {
     if (snakeX === food.x && snakeY === food.y) {
         food = generateFood(); // Generate a new food position
         score++;
+        console.log(`Food eaten! New score: ${score}`);
     } else {
         snake.pop(); // Remove last segment of the snake
     }
@@ -67,15 +69,31 @@ function draw() {
     snake.unshift(newHead); // Add new head to the snake
 
     // Check for collision with walls or self
-    if (snakeX < 0 || snakeX >= canvasWidth || snakeY < 0 || snakeY >= canvasHeight || collision(newHead, snake)) {
+    if (collisionWithWalls(newHead) || collisionWithSelf(newHead)) {
         clearInterval(game); // End game
+        console.log('Game Over!');
         alert('Game Over! Your score: ' + score);
     }
+
+    // Debugging output
+    console.log(`Snake Head Position: (${newHead.x}, ${newHead.y})`);
+    console.log(`Food Position: (${food.x}, ${food.y})`);
+    console.log(`Snake Length: ${snake.length}`);
 }
 
-function collision(head, array) {
-    for (let i = 1; i < array.length; i++) { // Start from 1 to skip the head
-        if (head.x === array[i].x && head.y === array[i].y) {
+function collisionWithWalls(head) {
+    // Adjusted to check if the entire head is out of bounds
+    const collision = head.x < 0 || head.x + box > canvasWidth || head.y < 0 || head.y + box > canvasHeight;
+    if (collision) {
+        console.log('Collision with walls detected!');
+    }
+    return collision;
+}
+
+function collisionWithSelf(head) {
+    for (let i = 1; i < snake.length; i++) { // Start from 1 to skip the head
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+            console.log('Collision with self detected!');
             return true;
         }
     }
@@ -92,9 +110,8 @@ function generateFood() {
     let foodX, foodY, collision;
     do {
         collision = false;
-        // Ensure the food is within the bounds of the canvas
-        foodX = Math.floor(Math.random() * (canvasWidth / box)) * box;
-        foodY = Math.floor(Math.random() * (canvasHeight / box)) * box;
+        foodX = Math.floor(Math.random() * canvasSizeX) * box;
+        foodY = Math.floor(Math.random() * canvasSizeY) * box;
 
         // Check if food position overlaps with any part of the snake
         for (let i = 0; i < snake.length; i++) {
@@ -105,6 +122,7 @@ function generateFood() {
         }
     } while (collision); // Repeat until a non-colliding position is found
 
+    console.log(`Generated Food Position: (${foodX}, ${foodY})`);
     return { x: foodX, y: foodY };
 }
 
