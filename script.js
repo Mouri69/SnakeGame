@@ -15,8 +15,6 @@ let food = generateFood();
 let d = 'RIGHT'; // Initialize direction to 'RIGHT'
 let nextDirection = 'RIGHT'; // Queue direction changes
 let score = 0;
-let lastRenderTime = 0; // Track last render time for smooth animation
-const frameRate = 15; // Adjust frame rate here
 
 document.addEventListener('keydown', direction);
 
@@ -28,7 +26,6 @@ function direction(event) {
 }
 
 function draw() {
-    // Clear the canvas
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     drawBorders(); // Draw the border around the canvas
 
@@ -87,7 +84,7 @@ function draw() {
 
     // Check for collision with walls or self
     if (collisionWithWalls(newHead) || collisionWithSelf(newHead)) {
-        cancelAnimationFrame(game); // End game
+        clearInterval(game); // End game
         console.log('Game Over!');
         alert('Game Over! Your score: ' + score);
     }
@@ -96,15 +93,6 @@ function draw() {
     console.log(`Snake Head Position: (${newHead.x}, ${newHead.y})`);
     console.log(`Food Position: (${food.x}, ${food.y})`);
     console.log(`Snake Length: ${snake.length}`);
-}
-
-// Function to update game state and render at the desired frame rate
-function gameLoop(currentTime) {
-    if (currentTime - lastRenderTime >= 1000 / frameRate) {
-        draw();
-        lastRenderTime = currentTime;
-    }
-    requestAnimationFrame(gameLoop);
 }
 
 function collisionWithWalls(head) {
@@ -155,5 +143,5 @@ function generateFood() {
     return { x: foodX, y: foodY };
 }
 
-// Start the game loop
-requestAnimationFrame(gameLoop);
+// Start the game
+const game = setInterval(draw, 100);
