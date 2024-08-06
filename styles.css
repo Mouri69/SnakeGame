@@ -25,22 +25,71 @@ body {
 
 #score-container {
     position: absolute;
-    top: -30px; /* Adjust this value to move it above the canvas */
+    top: -40px; /* Adjust this value to move it above the canvas */
     left: 50%;
     transform: translateX(-50%); /* Center horizontally */
     font-size: 20px;
     font-family: Arial, sans-serif;
     color: black;
+    display: flex;
+    justify-content: space-between; /* Space between score and high score */
+    width: 300px; /* Adjust width to fit both score and high score */
+    text-align: center; /* Center text within each section */
 }
 
-/* Media queries for mobile devices */
+#score-container div {
+    display: flex;
+    flex-direction: column; /* Stack label and value vertically */
+    align-items: center;
+    border: 1px solid black; /* Border around each score section */
+    padding: 5px;
+    border-radius: 5px;
+    background-color: white; /* Background color for visibility */
+    width: 140px; /* Adjust width to fit the content */
+}
+
+#score-container span {
+    margin: 0; /* Remove margin for proper alignment */
+}
+
+#score-container .score-label {
+    font-weight: bold; /* Make label text bold */
+}
+
+#score-container .score-value {
+    font-size: 24px; /* Larger font size for values */
+}
+
+/* Mobile adjustments */
 @media (max-width: 600px) {
     #gameCanvas {
-        border: 1px solid black; /* Thinner border for mobile */
+        width: 300px;
+        height: 300px;
     }
 
     #score-container {
-        font-size: 16px; /* Smaller font size for mobile */
-        top: -20px; /* Adjust the score container position for mobile */
+        font-size: 16px; /* Smaller font for mobile */
+        width: 200px; /* Adjust width for mobile */
     }
+
+    #restart-button {
+        font-size: 14px; /* Smaller button for mobile */
+        top: 5px; /* Adjust position for mobile */
+    }
+}
+
+#restart-button {
+    position: fixed; /* Fixed position to stay at the top */
+    top: 10px; /* Adjust this value to position it at the very top */
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    color: white;
+    background-color: black;
+    border: none; /* Remove border */
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000; /* Ensure it stays on top */
 }

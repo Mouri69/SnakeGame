@@ -15,45 +15,18 @@ let food = generateFood();
 let d = 'RIGHT'; // Initialize direction to 'RIGHT'
 let nextDirection = 'RIGHT'; // Queue direction changes
 let score = 0;
+let highScore = localStorage.getItem('highScore') || 0;
+
+document.getElementById('high-score').textContent = 'High Score: ' + highScore;
 
 document.addEventListener('keydown', direction);
-document.addEventListener('touchstart', handleTouchStart, false);
-document.addEventListener('touchmove', handleTouchMove, false);
+document.getElementById('restart-button').addEventListener('click', restartGame);
 
 function direction(event) {
     if (event.keyCode === 37 && d !== 'RIGHT') nextDirection = 'LEFT'; // Left arrow key
     if (event.keyCode === 38 && d !== 'DOWN') nextDirection = 'UP';   // Up arrow key
     if (event.keyCode === 39 && d !== 'LEFT') nextDirection = 'RIGHT'; // Right arrow key
     if (event.keyCode === 40 && d !== 'UP') nextDirection = 'DOWN';   // Down arrow key
-}
-
-let touchStartX = 0;
-let touchStartY = 0;
-
-function handleTouchStart(event) {
-    const touch = event.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-}
-
-function handleTouchMove(event) {
-    const touch = event.touches[0];
-    const touchEndX = touch.clientX;
-    const touchEndY = touch.clientY;
-
-    const dx = touchEndX - touchStartX;
-    const dy = touchEndY - touchStartY;
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0 && d !== 'LEFT') nextDirection = 'RIGHT';
-        if (dx < 0 && d !== 'RIGHT') nextDirection = 'LEFT';
-    } else {
-        if (dy > 0 && d !== 'UP') nextDirection = 'DOWN';
-        if (dy < 0 && d !== 'DOWN') nextDirection = 'UP';
-    }
-
-    touchStartX = touchEndX;
-    touchStartY = touchEndY;
 }
 
 function draw() {
@@ -83,9 +56,8 @@ function draw() {
     ctx.fillStyle = 'red';
     ctx.fillRect(food.x, food.y, box, box);
 
-    // Update score display
-    const scoreElement = document.getElementById('score');
-    scoreElement.textContent = 'Score: ' + score;
+    // Draw score
+    document.getElementById('score').textContent = 'Score: ' + score;
 
     // Update snake position
     let snakeX = snake[0].x;
@@ -105,6 +77,11 @@ function draw() {
     if (snakeX === food.x && snakeY === food.y) {
         food = generateFood(); // Generate a new food position
         score++;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('highScore', highScore);
+            document.getElementById('high-score').textContent = 'High Score: ' + highScore;
+        }
         console.log(`Food eaten! New score: ${score}`);
     } else {
         snake.pop(); // Remove last segment of the snake
@@ -127,7 +104,7 @@ function draw() {
 
 function collisionWithWalls(head) {
     // Adjusted to check if the entire head is out of bounds
-    const collision = head.x < 0 || head.x >= canvasWidth || head.y < 0 || head.y >= canvasHeight;
+    const collision = head.x < 0 || head.x + box > canvasWidth || head.y < 0 || head.y + box > canvasHeight;
     if (collision) {
         console.log('Collision with walls detected!');
     }
@@ -173,5 +150,16 @@ function generateFood() {
     return { x: foodX, y: foodY };
 }
 
+function restartGame() {
+    clearInterval(game); // Clear the existing game interval
+    snake = [{ x: 9 * box, y: 10 * box }];
+    food = generateFood();
+    d = 'RIGHT';
+    nextDirection = 'RIGHT';
+    score = 0;
+    document.getElementById('score').textContent = 'Score: ' + score;
+    game = setInterval(draw, 100); // Restart the game
+}
+
 // Start the game
-const game = setInterval(draw, 100);
+let game = setInterval(draw, 100);
