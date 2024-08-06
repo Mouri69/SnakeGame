@@ -17,12 +17,43 @@ let nextDirection = 'RIGHT'; // Queue direction changes
 let score = 0;
 
 document.addEventListener('keydown', direction);
+document.addEventListener('touchstart', handleTouchStart, false);
+document.addEventListener('touchmove', handleTouchMove, false);
 
 function direction(event) {
     if (event.keyCode === 37 && d !== 'RIGHT') nextDirection = 'LEFT'; // Left arrow key
     if (event.keyCode === 38 && d !== 'DOWN') nextDirection = 'UP';   // Up arrow key
     if (event.keyCode === 39 && d !== 'LEFT') nextDirection = 'RIGHT'; // Right arrow key
     if (event.keyCode === 40 && d !== 'UP') nextDirection = 'DOWN';   // Down arrow key
+}
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+function handleTouchStart(event) {
+    const touch = event.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+}
+
+function handleTouchMove(event) {
+    const touch = event.touches[0];
+    const touchEndX = touch.clientX;
+    const touchEndY = touch.clientY;
+
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && d !== 'LEFT') nextDirection = 'RIGHT';
+        if (dx < 0 && d !== 'RIGHT') nextDirection = 'LEFT';
+    } else {
+        if (dy > 0 && d !== 'UP') nextDirection = 'DOWN';
+        if (dy < 0 && d !== 'DOWN') nextDirection = 'UP';
+    }
+
+    touchStartX = touchEndX;
+    touchStartY = touchEndY;
 }
 
 function draw() {
