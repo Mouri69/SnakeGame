@@ -161,5 +161,38 @@ function restartGame() {
     game = setInterval(draw, 100); // Restart the game
 }
 
+// Add touch control functionality
+document.addEventListener('touchstart', handleTouchStart, false);
+document.addEventListener('touchmove', handleTouchMove, false);
+
+let touchStartX, touchStartY;
+
+function handleTouchStart(event) {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+}
+
+function handleTouchMove(event) {
+    if (!touchStartX || !touchStartY) return;
+
+    let touchEndX = event.touches[0].clientX;
+    let touchEndY = event.touches[0].clientY;
+
+    let diffX = touchEndX - touchStartX;
+    let diffY = touchEndY - touchStartY;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0 && d !== 'LEFT') nextDirection = 'RIGHT';
+        if (diffX < 0 && d !== 'RIGHT') nextDirection = 'LEFT';
+    } else {
+        if (diffY > 0 && d !== 'UP') nextDirection = 'DOWN';
+        if (diffY < 0 && d !== 'DOWN') nextDirection = 'UP';
+    }
+
+    touchStartX = null;
+    touchStartY = null;
+}
+
+
 // Start the game
 let game = setInterval(draw, 100);
