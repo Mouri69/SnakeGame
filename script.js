@@ -52,9 +52,10 @@ function draw() {
     ctx.fillStyle = 'red';
     ctx.fillRect(food.x, food.y, box, box);
 
-    // Update score
-    const scoreElement = document.getElementById('score');
-    scoreElement.textContent = 'Score: ' + score;
+    // Draw score
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.fillText('Score: ' + score, box, box);
 
     // Update snake position
     let snakeX = snake[0].x;
