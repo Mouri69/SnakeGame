@@ -28,6 +28,7 @@ document.getElementById('score').textContent = 'Score: ' + score;
 console.log(`Lives: ${lives}`); // Log initial number of lives
 
 document.addEventListener('keydown', direction);
+
 document.getElementById('restart-button').addEventListener('click', restartGame);
 
 function direction(event) {
@@ -286,6 +287,8 @@ function showUIEffect(effectText) {
     }, 1000); // Duration of the effect display
 }
 
+let game = setInterval(draw, gameSpeed); // Use 'let' instead of 'const' for game
+
 function restartGame() {
     snake = [];
     snake[0] = { x: 9 * box, y: 10 * box };
@@ -299,6 +302,39 @@ function restartGame() {
     document.getElementById('score').textContent = 'Score: ' + score;
     document.getElementById('high-score').textContent = 'High Score: ' + highScore;
     console.log(`Game restarted! Lives: ${lives}`);
+    clearInterval(game); // Stop the previous game loop
+    game = setInterval(draw, gameSpeed); // Start a new game loop
 }
 
-const game = setInterval(draw, gameSpeed);
+// Add touch control functionality
+document.addEventListener('touchstart', handleTouchStart, false);
+document.addEventListener('touchmove', handleTouchMove, false);
+
+let touchStartX, touchStartY;
+
+function handleTouchStart(event) {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+}
+
+function handleTouchMove(event) {
+    if (!touchStartX || !touchStartY) return;
+
+    let touchEndX = event.touches[0].clientX;
+    let touchEndY = event.touches[0].clientY;
+
+    let diffX = touchEndX - touchStartX;
+    let diffY = touchEndY - touchStartY;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 0 && d !== 'LEFT') nextDirection = 'RIGHT';
+        if (diffX < 0 && d !== 'RIGHT') nextDirection = 'LEFT';
+    } else {
+        if (diffY > 0 && d !== 'UP') nextDirection = 'DOWN';
+        if (diffY < 0 && d !== 'DOWN') nextDirection = 'UP';
+    }
+
+    touchStartX = null;
+    touchStartY = null;
+}
+
