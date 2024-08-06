@@ -11,13 +11,20 @@ let snake = [];
 snake[0] = { x: 9 * box, y: 10 * box };
 
 let food = generateFood();
+let specialFood = generateSpecialFood();
 
 let d = 'RIGHT'; // Initialize direction to 'RIGHT'
 let nextDirection = 'RIGHT'; // Queue direction changes
 let score = 0;
 let highScore = localStorage.getItem('highScore') || 0;
+let gameSpeed = 100; // Default speed
+let slowDownDuration = 0; // Duration for slow down effect
+let extraLife = 0; // Counter for extra lives
+let lives = 1; // Initial number of lives
 
 document.getElementById('high-score').textContent = 'High Score: ' + highScore;
+document.getElementById('score').textContent = 'Score: ' + score;
+console.log(`Lives: ${lives}`); // Log initial number of lives
 
 document.addEventListener('keydown', direction);
 document.getElementById('restart-button').addEventListener('click', restartGame);
@@ -46,19 +53,6 @@ function draw() {
         }
     }
 
-    // Draw snake
-    for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = i === 0 ? 'green' : 'lightgreen';
-        ctx.fillRect(snake[i].x, snake[i].y, box, box);
-    }
-
-    // Draw food
-    ctx.fillStyle = 'red';
-    ctx.fillRect(food.x, food.y, box, box);
-
-    // Draw score
-    document.getElementById('score').textContent = 'Score: ' + score;
-
     // Update snake position
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
@@ -83,23 +77,77 @@ function draw() {
             document.getElementById('high-score').textContent = 'High Score: ' + highScore;
         }
         console.log(`Food eaten! New score: ${score}`);
+        // Grow the snake by adding the new head, without removing the tail
+        snake.unshift(newHead);
     } else {
-        snake.pop(); // Remove last segment of the snake
+        // Move the snake: Add new head and remove the tail
+        snake.unshift(newHead);
+        snake.pop();
     }
 
-    snake.unshift(newHead); // Add new head to the snake
+    // Check for collision with special food
+    if (specialFood && snakeX === specialFood.x && snakeY === specialFood.y) {
+        if (specialFood.type === 'slowDown') {
+            slowDownDuration = 5000; // Slow down effect duration in milliseconds
+            gameSpeed = 300; // Slow down the speed
+            console.log(`Slow Down Food eaten! Game speed: ${gameSpeed}`);
+        } else if (specialFood.type === 'extraLife') {
+            if (lives < 2) {
+                lives++;
+                console.log(`Extra Life Food eaten! Lives: ${lives}`);
+            } else {
+                console.log('Extra Life Food eaten but lives are already maxed out!');
+            }
+            score++;
+            console.log(`Score: ${score}`);
+        }
+        specialFood = null; // Remove special food after it's eaten
+    }
+
+    // Draw snake
+    for (let i = 0; i < snake.length; i++) {
+        if (slowDownDuration > 0 && (i === 0 || i === snake.length - 1)) {
+            ctx.fillStyle = 'blue'; // Change color to blue for head and tail during slow down
+        } else {
+            ctx.fillStyle = i === 0 ? 'green' : 'lightgreen';
+        }
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    }
+
+    // Draw food
+    ctx.fillStyle = food.color;
+    ctx.fillRect(food.x, food.y, box, box);
+
+    // Draw special food
+    if (specialFood) {
+        ctx.fillStyle = specialFood.color;
+        ctx.fillRect(specialFood.x, specialFood.y, box, box);
+    }
+
+    // Draw score
+    document.getElementById('score').textContent = 'Score: ' + score;
 
     // Check for collision with walls or self
     if (collisionWithWalls(newHead) || collisionWithSelf(newHead)) {
-        clearInterval(game); // End game
-        console.log('Game Over!');
-        alert('Game Over! Your score: ' + score);
+        if (lives > 1) {
+            lives--; // Reduce lives and continue game
+            console.log(`Collision detected. Lives remaining: ${lives}`);
+        } else {
+            clearInterval(game); // End game
+            console.log('Game Over!');
+            alert('Game Over! Your score: ' + score);
+        }
     }
 
-    // Debugging output
-    console.log(`Snake Head Position: (${newHead.x}, ${newHead.y})`);
-    console.log(`Food Position: (${food.x}, ${food.y})`);
-    console.log(`Snake Length: ${snake.length}`);
+    // Handle slow down effect
+    if (slowDownDuration > 0) {
+        slowDownDuration -= 100; // Decrease duration
+        if (slowDownDuration <= 0) {
+            gameSpeed = 100; // Restore speed
+            console.log('Speed back to normal');
+            specialFood = generateSpecialFood(); // Generate new special food
+        }
+    }
 }
 
 function collisionWithWalls(head) {
@@ -146,53 +194,57 @@ function generateFood() {
         }
     } while (collision); // Repeat until a non-colliding position is found
 
-    console.log(`Generated Food Position: (${foodX}, ${foodY})`);
-    return { x: foodX, y: foodY };
+    return {
+        x: foodX,
+        y: foodY,
+        color: 'red' // Normal food color
+    };
 }
+
+function generateSpecialFood() {
+    if (Math.random() < 0.5) { // 50% chance for special food to appear
+        let foodX, foodY;
+        const borderBuffer = box;
+
+        // Ensure special food does not overlap with snake
+        do {
+            foodX = Math.floor(Math.random() * (canvasSizeX - 2)) * box + borderBuffer;
+            foodY = Math.floor(Math.random() * (canvasSizeY - 2)) * box + borderBuffer;
+        } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
+
+        // Randomly assign type and color for special food
+        const foodType = Math.random() < 0.5 ? 'slowDown' : 'extraLife';
+        const foodColor = foodType === 'slowDown' ? 'blue' : 'yellow';
+
+        return {
+            x: foodX,
+            y: foodY,
+            color: foodColor,
+            type: foodType
+        };
+    }
+    return null;
+}
+
 
 function restartGame() {
     clearInterval(game); // Clear the existing game interval
     snake = [{ x: 9 * box, y: 10 * box }];
     food = generateFood();
+    specialFood = generateSpecialFood();
     d = 'RIGHT';
     nextDirection = 'RIGHT';
     score = 0;
-    document.getElementById('score').textContent = 'Score: ' + score;
-    game = setInterval(draw, 100); // Restart the game
+    lives = 1; // Reset lives to initial value
+    extraLife = 0; // Reset extra life count
+    console.log(`Lives: ${lives}`); // Log reset lives count
+    game = setInterval(draw, gameSpeed); // Restart the game with the current speed
 }
-
-// Add touch control functionality
-document.addEventListener('touchstart', handleTouchStart, false);
-document.addEventListener('touchmove', handleTouchMove, false);
-
-let touchStartX, touchStartY;
-
-function handleTouchStart(event) {
-    touchStartX = event.touches[0].clientX;
-    touchStartY = event.touches[0].clientY;
-}
-
-function handleTouchMove(event) {
-    if (!touchStartX || !touchStartY) return;
-
-    let touchEndX = event.touches[0].clientX;
-    let touchEndY = event.touches[0].clientY;
-
-    let diffX = touchEndX - touchStartX;
-    let diffY = touchEndY - touchStartY;
-
-    if (Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX > 0 && d !== 'LEFT') nextDirection = 'RIGHT';
-        if (diffX < 0 && d !== 'RIGHT') nextDirection = 'LEFT';
-    } else {
-        if (diffY > 0 && d !== 'UP') nextDirection = 'DOWN';
-        if (diffY < 0 && d !== 'DOWN') nextDirection = 'UP';
-    }
-
-    touchStartX = null;
-    touchStartY = null;
-}
-
 
 // Start the game
-let game = setInterval(draw, 100);
+let game = setInterval(draw, gameSpeed);
+
+// Generate special food every 10 seconds
+setInterval(() => {
+    specialFood = generateSpecialFood();
+}, 10000);
